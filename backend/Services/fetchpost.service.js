@@ -29,3 +29,17 @@ export const fetchPostSlug = async (data) => {
         throw new Error(err.originalError?.info?.message || err.message);
     }
 }
+
+export const fetchPostSearch = async (data) => {
+    const pool = await getPool();
+    const request = pool.request();
+
+    request.input("Search", sql.NVarChar(200), data.search);
+
+    try{
+        const response = await request.execute("dbo.usp_Post_Search");
+        return response.recordset
+    }catch(error){
+        throw new Error(err.originalError?.info?.message || err.message);
+    }
+}

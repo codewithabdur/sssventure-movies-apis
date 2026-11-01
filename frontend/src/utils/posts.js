@@ -23,6 +23,16 @@ export async function fetchPosts(page, pageSize) {
   return { posts: posts.map(mapPost), totalPosts }
 }
 
+export async function searchPosts(search) {
+  const posts = await postJson('/fetch/search', { search })
+
+  if (!Array.isArray(posts)) {
+    throw new Error('Search returned an unexpected response')
+  }
+
+  return posts.map(mapPost)
+}
+
 export async function fetchPostDetails(slug, postId) {
   const recordsets = await postJson('/fecth/slug', { slug, postId: Number(postId) })
   const post = recordsets?.[0]?.[0]

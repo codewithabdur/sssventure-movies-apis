@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import postRoutes from "./Routes/Post.routes.js";
 import fetchPostRoutes from "./Routes/fetcpost.routes.js";
+import commentRoutes from "./Routes/comment.routes.js";
 
 const app = express();
 
@@ -49,6 +50,6 @@ app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 app.use("/api/posts", postRoutes);
 app.use("/api/posts", fetchPostRoutes);
-
+app.use("/api/comments", commentRoutes);
 
 export default app;

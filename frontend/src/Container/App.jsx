@@ -7,7 +7,7 @@ import {
   createMovieSlug,
   filterMovies,
 } from "../utils/catalog.js";
-import { fetchPostDetails, fetchPosts } from "../utils/posts.js";
+import { fetchPostDetails, fetchPosts, searchPosts } from "../utils/posts.js";
 import DetailPage from "./DetailPage.jsx";
 
 function MovieRoute({ movies, onSelect, onBack }) {
@@ -72,23 +72,29 @@ export default function App() {
   const [pageSize] = useState(10);
   const [catalogResponse, setCatalogResponse] = useState({
     page: -1,
+    searchTerm: "",
     movies: [],
     totalPosts: 0,
     error: "",
   });
   const navigate = useNavigate();
   const movies = catalogResponse.movies;
-  const loading = catalogResponse.page !== page;
+  const loading = catalogResponse.page !== page || catalogResponse.searchTerm !== searchTerm;
   const error = loading ? "" : catalogResponse.error;
 
   useEffect(() => {
     let active = true;
 
-    fetchPosts(page, pageSize)
+    const request = searchTerm
+      ? searchPosts(searchTerm).then((posts) => ({ posts, totalPosts: posts.length }))
+      : fetchPosts(page, pageSize);
+
+    request
       .then((result) => {
         if (active) {
           setCatalogResponse({
             page,
+            searchTerm,
             movies: result.posts,
             totalPosts: result.totalPosts,
             error: "",
@@ -99,6 +105,7 @@ export default function App() {
         if (active) {
           setCatalogResponse({
             page,
+            searchTerm,
             movies: [],
             totalPosts: 0,
             error: requestError.message,
@@ -109,17 +116,25 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, [page, pageSize]);
+  }, [page, pageSize, searchTerm]);
 
   const visibleMovies = useMemo(
-    () => filterMovies(movies, searchTerm, activeFilter),
-    [movies, searchTerm, activeFilter],
+    () => filterMovies(movies, "", activeFilter),
+    [movies, activeFilter],
   );
 
   function returnHome() {
     navigate("/");
     setActiveFilter("");
     setSearchTerm("");
+    setPage(0);
+  }
+
+  function submitSearch(query) {
+    navigate("/");
+    setActiveFilter("");
+    setPage(0);
+    setSearchTerm(query.trim());
   }
 
   function selectMovie(movie) {
@@ -129,7 +144,7 @@ export default function App() {
 
   return (
     <div className="page-shell">
-      <Header onSearch={setSearchTerm} onHome={returnHome} />
+      <Header onSearch={submitSearch} onHome={returnHome} />
       <Routes>
         <Route
           path="/"
