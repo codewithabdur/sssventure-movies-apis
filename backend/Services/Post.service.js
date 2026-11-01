@@ -38,6 +38,7 @@ export const insertPost = async (data) => {
     downloads.columns.add("TargetUrl", sql.NVarChar(2000), { nullable: false });
     downloads.columns.add("Epe_Link", sql.NVarChar(sql.MAX), { nullable: true });
     downloads.columns.add("SortOrder", sql.SmallInt, { nullable: false });
+    downloads.columns.add("ExtraUrl", sql.NVarChar(sql.MAX), { nullable: true });
 
     for (const d of data.downloads ?? []) {
         downloads.rows.add(
@@ -49,7 +50,8 @@ export const insertPost = async (data) => {
             toSqlText(d.fileSizeText),
             toSqlText(d.targetUrl),
             toSqlText(d.epe_Link),
-            d.sortOrder ?? 0
+            d.sortOrder ?? 0 ,
+            toSqlText(d.extraUrl) 
         );
     }
 

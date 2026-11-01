@@ -1,7 +1,7 @@
 import { insertPost } from "../Services/Post.service.js";   // adjust path/folder name to yours
 
 const QUALITIES = ["480p", "720p", "1080p"];
-const TEXT_FIELDS = ["codec", "label", "fileSizeText", "targetUrl", "epe_Link"];
+const TEXT_FIELDS = ["codec", "label", "fileSizeText", "targetUrl", "epe_Link",  "extraUrl"];
 const isSqlText = (value) =>
     value === undefined ||
     value === null ||

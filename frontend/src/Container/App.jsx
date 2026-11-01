@@ -9,6 +9,7 @@ import {
 } from "../utils/catalog.js";
 import { fetchPostDetails, fetchPosts, searchPosts } from "../utils/posts.js";
 import DetailPage from "./DetailPage.jsx";
+import HamsterLoader from "../Component/hamsterLoader.jsx";
 
 function MovieRoute({ movies, onSelect, onBack }) {
   const { slug, id } = useParams();
@@ -51,7 +52,7 @@ function MovieRoute({ movies, onSelect, onBack }) {
   }
 
   if (!currentDetail) {
-    return <main className="loading-state">Loading title…</main>;
+    return <main className="loading-state"><HamsterLoader /></main>;
   }
 
   return (
@@ -68,7 +69,7 @@ function MovieRoute({ movies, onSelect, onBack }) {
 export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [catalogResponse, setCatalogResponse] = useState({
     page: -1,
@@ -127,13 +128,13 @@ export default function App() {
     navigate("/");
     setActiveFilter("");
     setSearchTerm("");
-    setPage(0);
+    setPage(1);
   }
 
   function submitSearch(query) {
     navigate("/");
     setActiveFilter("");
-    setPage(0);
+    setPage(1);
     setSearchTerm(query.trim());
   }
 

@@ -3,6 +3,16 @@ import MovieCard from "../Component/MovieCard.jsx";
 import Poster from "../Component/Poster.jsx";
 import Sidebar from "../Component/Sidebar.jsx";
 
+function getDownloadExtraUrl(download, targetId) {
+  const extraUrl = String(download.ExtraUrl ?? "").trim();
+  const id = String(targetId ?? "").trim();
+  if (!extraUrl || !id) return "";
+
+  const url = new URL(extraUrl, window.location.origin);
+  url.pathname = `${url.pathname.replace(/\/+$/, "")}/${encodeURIComponent(id)}`;
+  return url.href;
+}
+
 export default function DetailPage({
   movie,
   downloads,
@@ -164,42 +174,46 @@ const [success, setSuccess] = useState(null);
         <div className="season-links">
           {downloads.map((download) => {
             const archiveBaseUrl =
-              Number(download.EpisodeNumber) === 0
-                ? "https://links.modpro.blog"
-                : "https://episodes.modpro.blog";
+                Number(download.EpisodeNumber) === 0
+                  ? "https://links.modpro.blog"
+                  : "https://episodes.modpro.blog";
+            const zipUrl =
+                `${archiveBaseUrl}/archives/${encodeURIComponent(String(download.TargetUrl ?? "").trim())}`;
+            const fileUrl =
+                `${archiveBaseUrl}/archives/${encodeURIComponent(String(download.Epe_Link ?? "").trim())}`;
 
             return (
-              <div key={download.DownloadId}>
-                <span>{download.Label || `${download.Quality} download`}</span>
-                <small>
-                  {download.FileSizeText}
-                  {download.Codec && ` · ${download.Codec}`}
-                </small>
-                <div className="download-buttons">
-                  {download.TargetUrl != null &&
-                    String(download.TargetUrl).trim() !== "" && (
-                      <a
-                        className="download-button zip"
-                        href={`${archiveBaseUrl}/archives/${encodeURIComponent(String(download.TargetUrl).trim())}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Batch/ZIP
-                      </a>
-                    )}
-                  {download.Epe_Link != null &&
-                    String(download.Epe_Link).trim() !== "" && (
-                      <a
-                        className="download-button"
-                        href={`${archiveBaseUrl}/archives/${encodeURIComponent(String(download.Epe_Link).trim())}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        File Download
-                      </a>
-                    )}
+                <div key={download.DownloadId}>
+                  <span>{download.Label || `${download.Quality} download`}</span>
+                  <small>
+                    {download.FileSizeText}
+                    {download.Codec && ` · ${download.Codec}`}
+                  </small>
+                  <div className="download-buttons">
+                    {download.TargetUrl != null &&
+                      String(download.TargetUrl).trim() !== "" && (
+                        <a
+                          className="download-button zip"
+                          href={getDownloadExtraUrl(download, download.TargetUrl) || zipUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Batch/ZIP
+                        </a>
+                      )}
+                    {download.Epe_Link != null &&
+                      String(download.Epe_Link).trim() !== "" && (
+                        <a
+                          className="download-button"
+                          href={getDownloadExtraUrl(download, download.Epe_Link) || fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          File Download
+                        </a>
+                      )}
+                  </div>
                 </div>
-              </div>
             );
           })}
         </div>
