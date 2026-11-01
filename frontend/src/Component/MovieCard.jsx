@@ -5,8 +5,9 @@ export default function MovieCard({ movie, onSelect }) {
     <button className="movie-card" onClick={() => onSelect(movie)}>
       <Poster movie={movie} />
       <span className="card-caption">
-        <strong>Download {movie.title}</strong> ({movie.season}) Dual Audio [Hindi-English]
-        Web-DL 480p | 720p | 1080p
+        <strong>{movie.title}</strong>
+        {movie.year && <> · {movie.year}</>}
+        {movie.language && <> · {movie.language}</>}
       </span>
     </button>
   )

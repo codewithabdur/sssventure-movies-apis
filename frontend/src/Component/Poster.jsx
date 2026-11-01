@@ -1,4 +1,12 @@
 export default function Poster({ movie }) {
+  if (movie.posterUrl) {
+    return (
+      <div className="poster-art poster-image">
+        <img src={movie.posterUrl} alt={`${movie.title} poster`} loading="lazy" />
+      </div>
+    )
+  }
+
   return (
     <div className={`poster-art art-${movie.color}`}>
       <div className="poster-sun" />

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Route, Routes, useNavigate, useParams } from "react-router-dom";
 import Catalog from "../Component/Catalog.jsx";
 import Footer from "../Component/Footer.jsx";
@@ -6,20 +6,43 @@ import Header from "../Component/Header.jsx";
 import {
   createMovieSlug,
   filterMovies,
-  findMovieBySlug,
 } from "../utils/catalog.js";
-import { movies } from "../utils/movies.js";
+import { fetchPostDetails, fetchPosts } from "../utils/posts.js";
 import DetailPage from "./DetailPage.jsx";
 
-function MovieRoute({ onSelect, onBack }) {
+function MovieRoute({ movies, onSelect, onBack }) {
   const { slug, id } = useParams();
-  const movie = findMovieBySlug(movies, slug, id);
+  const [detailResponse, setDetailResponse] = useState(null);
+  const [detailError, setDetailError] = useState(null);
 
-  if (!movie) {
+  useEffect(() => {
+    let active = true;
+
+    fetchPostDetails(slug, id)
+      .then((result) => {
+        if (active) setDetailResponse({ slug, id, result });
+      })
+      .catch((requestError) => {
+        if (active) setDetailError({ slug, id, message: requestError.message });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [slug, id]);
+
+  const currentDetail = detailResponse?.slug === slug && detailResponse?.id === id
+    ? detailResponse.result
+    : null;
+  const currentError = detailError?.slug === slug && detailError?.id === id
+    ? detailError.message
+    : "";
+
+  if (currentError) {
     return (
       <main className="not-found">
-        <h1>Title not found</h1>
-        <p>The movie in this URL could not be found.</p>
+        <h1>Unable to load title</h1>
+        <p>{currentError}</p>
         <button className="back-button" onClick={onBack}>
           ← Back to all titles
         </button>
@@ -27,16 +50,70 @@ function MovieRoute({ onSelect, onBack }) {
     );
   }
 
-  return <DetailPage movie={movie} onSelect={onSelect} onBack={onBack} />;
+  if (!currentDetail) {
+    return <main className="loading-state">Loading title…</main>;
+  }
+
+  return (
+    <DetailPage
+      movie={currentDetail.post}
+      downloads={currentDetail.downloads}
+      relatedMovies={movies.filter((movie) => movie.id !== currentDetail.post.id).slice(0, 4)}
+      onSelect={onSelect}
+      onBack={onBack}
+    />
+  );
 }
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [catalogResponse, setCatalogResponse] = useState({
+    page: -1,
+    movies: [],
+    totalPosts: 0,
+    error: "",
+  });
   const navigate = useNavigate();
+  const movies = catalogResponse.movies;
+  const loading = catalogResponse.page !== page;
+  const error = loading ? "" : catalogResponse.error;
+
+  useEffect(() => {
+    let active = true;
+
+    fetchPosts(page, pageSize)
+      .then((result) => {
+        if (active) {
+          setCatalogResponse({
+            page,
+            movies: result.posts,
+            totalPosts: result.totalPosts,
+            error: "",
+          });
+        }
+      })
+      .catch((requestError) => {
+        if (active) {
+          setCatalogResponse({
+            page,
+            movies: [],
+            totalPosts: 0,
+            error: requestError.message,
+          });
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [page, pageSize]);
+
   const visibleMovies = useMemo(
     () => filterMovies(movies, searchTerm, activeFilter),
-    [searchTerm, activeFilter],
+    [movies, searchTerm, activeFilter],
   );
 
   function returnHome() {
@@ -46,7 +123,7 @@ export default function App() {
   }
 
   function selectMovie(movie) {
-    navigate(`/movie/${createMovieSlug(movie.title)}/${movie.id}`);
+    navigate(`/movie/${movie.slug || createMovieSlug(movie.title)}/${movie.id}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -60,6 +137,11 @@ export default function App() {
             <main className="catalog">
               <Catalog
                 movies={visibleMovies}
+                page={page}
+                pageCount={Math.max(1, Math.ceil(catalogResponse.totalPosts / pageSize))}
+                loading={loading}
+                error={error}
+                onPageChange={setPage}
                 onSelect={selectMovie}
                 onFilter={setActiveFilter}
               />
@@ -68,11 +150,23 @@ export default function App() {
         />
         <Route
           path="/movie/:slug/:id"
-          element={<MovieRoute onSelect={selectMovie} onBack={returnHome} />}
+          element={
+            <MovieRoute
+              movies={movies}
+              onSelect={selectMovie}
+              onBack={returnHome}
+            />
+          }
         />
         <Route
           path="*"
-          element={<MovieRoute onSelect={selectMovie} onBack={returnHome} />}
+          element={
+            <MovieRoute
+              movies={movies}
+              onSelect={selectMovie}
+              onBack={returnHome}
+            />
+          }
         />
       </Routes>
       <Footer />

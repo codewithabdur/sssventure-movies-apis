@@ -1,60 +1,96 @@
 import MovieCard from '../Component/MovieCard.jsx'
 import Poster from '../Component/Poster.jsx'
 import Sidebar from '../Component/Sidebar.jsx'
-import { movies } from '../utils/movies.js'
 
-export default function DetailPage({ movie, onSelect, onBack }) {
+export default function DetailPage({ movie, downloads, relatedMovies, onSelect, onBack }) {
+  const qualityLabels = [
+    movie.has480p && '480p',
+    movie.has720p && '720p',
+    movie.has1080p && '1080p',
+  ].filter(Boolean)
+
   return (
     <main className="detail-layout">
       <article className="detail-content">
-        <div className="breadcrumbs">◉ &nbsp; {movie.genre}, Drama Series, English, Hindi, Latest Released, Netflix, Popular Series</div>
-        <h1>Download {movie.title} ({movie.year}) Multi Audio [Hindi-English] Spanish) Web-DL 480p | 720p | 1080p</h1>
-        <div className="post-meta">◷ 2 Days Ago &nbsp; · &nbsp; ♡ No Comments</div>
+        <div className="breadcrumbs">◉ &nbsp; {movie.language || 'Movie'}</div>
+        <h1>{movie.title}</h1>
+        <div className="post-meta">
+          ◷ {movie.publishedAt ? new Date(movie.publishedAt).toLocaleDateString() : 'Recently published'}
+          {movie.year && <> &nbsp; · &nbsp; {movie.year}</>}
+        </div>
         <div className="detail-copy">
-          <p>✅ Download {movie.title} Season 1 2026 All Episodes (Hindi-English-Spanish) and watch online in high quality. Get all episodes in multiple formats with subtitles. Stream and download your favorite series in HD quality.</p>
+          {movie.synopsis && <p>{movie.synopsis}</p>}
           <p><b className="green-text">MoviesMod.Org</b> is the best website platform for Bollywood and Hollywood movies. We provide free online downloads in your favorite quality. Click on the download button and follow the steps to get your favorite movies for free.</p>
         </div>
         <div className="feature-panel">
-          <div className={`feature-poster art-${movie.color}`}><Poster movie={movie} /></div>
+          <div className="feature-poster"><Poster movie={movie} /></div>
           <div>
-            <h2>{movie.title} <small>({movie.year})</small></h2>
-            <p>⭐ Rating: <b>{movie.rating} / 10</b></p>
-            <p>A gripping story with a cast of unforgettable characters, a richly imagined world, and a mystery that will keep you watching until the very end.</p>
-            <p><b>Actors:</b> Jo Dev, Anika Belle, David Tennent</p>
+            <h2>{movie.title}</h2>
+            {movie.year && <p><b>Release:</b> {movie.year}</p>}
+            {movie.language && <p><b>Language:</b> {movie.language}</p>}
+            {qualityLabels.length > 0 && <p><b>Available quality:</b> {qualityLabels.join(', ')}</p>}
+            {movie.posterLink && (
+              <p>
+                <a href={movie.posterLink} target="_blank" rel="noreferrer">
+                  View external title page
+                </a>
+              </p>
+            )}
           </div>
         </div>
         <section className="info-section">
-          <h2>Series Info:</h2>
+          <h2>Post Info:</h2>
           <ul>
             <li><b>Full Name:</b> {movie.title}</li>
-            <li><b>Season:</b> 1</li>
-            <li><b>Episodes:</b> 08 Episodes</li>
-            <li><b>Language:</b> Dual Audio (Hindi-English)</li>
-            <li><b>Subtitles:</b> Yes (English)</li>
-            <li><b>Release Year:</b> {movie.year}</li>
-            <li><b>Size:</b> 480p | 720p | 1080p</li>
-            <li><b>Quality:</b> 480p 720p 1080p</li>
-            <li><b>Format:</b> Mkv</li>
+            {movie.year && <li><b>Release:</b> {movie.year}</li>}
+            {movie.language && <li><b>Language:</b> {movie.language}</li>}
+            {qualityLabels.length > 0 && <li><b>Quality:</b> {qualityLabels.join(' | ')}</li>}
           </ul>
         </section>
-        <section className="info-section">
-          <h2>Storyline:</h2>
-          <p>Don’t miss this exciting new series, where every decision changes what comes next. A story of family, ambition, and unexpected twists brings the characters together in a world full of possibility.</p>
-        </section>
-        <section className="screenshots">
-          <h2>Screenshots:</h2>
-          {[0, 1, 2, 3].map((item) => (
-            <div className={`story-frame story-frame-${item + 1}`} key={item}><span>{movie.title}</span></div>
-          ))}
-        </section>
-        <p className="download-title">Download {movie.title} (S01 Hindi Dubbed 480p, 720p &amp; 1080p)</p>
+        {movie.screenshots.length > 0 && (
+          <section className="screenshots">
+            <h2>Screenshots:</h2>
+            {movie.screenshots.map((url) => (
+              <img className="detail-screenshot" src={url} alt={`${movie.title} screenshot`} loading="lazy" key={url} />
+            ))}
+          </section>
+        )}
+        {downloads.length > 0 && <p className="download-title">Available downloads for {movie.title}</p>}
         <div className="season-links">
-          {['Season 1 [Hindi-English-Spanish] 480p', 'Season 1 [Hindi-English-Spanish] 720p', 'Season 1 [Hindi-English-Spanish] 720p x265', 'Season 1 [Hindi-English-Spanish] 1080p'].map((quality) => (
-            <div key={quality}>
-              <span>{quality} Movies [10GB]</span>
-              <div><button>Episode Links</button><button className="zip">Batch/Zip File</button></div>
-            </div>
-          ))}
+          {downloads.map((download) => {
+            const archiveBaseUrl = Number(download.EpisodeNumber) === 0
+              ? 'https://links.modpro.blog'
+              : 'https://episodes.modpro.blog'
+
+            return (
+              <div key={download.DownloadId}>
+                <span>{download.Label || `${download.Quality} download`}</span>
+                <small>{download.FileSizeText}{download.Codec && ` · ${download.Codec}`}</small>
+                <div className="download-buttons">
+                  {download.TargetUrl != null && String(download.TargetUrl).trim() !== '' && (
+                    <a
+                      className="download-button zip"
+                      href={`${archiveBaseUrl}/archives/${encodeURIComponent(String(download.TargetUrl).trim())}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      ZIP
+                    </a>
+                  )}
+                  {download.Epe_Link != null && String(download.Epe_Link).trim() !== '' && (
+                    <a
+                      className="download-button"
+                      href={`${archiveBaseUrl}/archives/${encodeURIComponent(String(download.Epe_Link).trim())}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      File Download
+                    </a>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
         <div className="detail-chips">
           {['JOIN TELEGRAM', 'Bollywood', 'AnimeFlix', 'Updates', '4K MOVIES'].map((tag) => <button key={tag}>{tag}</button>)}
@@ -68,8 +104,8 @@ export default function DetailPage({ movie, onSelect, onBack }) {
         <section className="related">
           <h2>RELATED POSTS</h2>
           <div>
-            {movies.slice(8, 12).map((relatedMovie) => (
-              <MovieCard key={relatedMovie.title} movie={relatedMovie} onSelect={onSelect} />
+            {relatedMovies.map((relatedMovie) => (
+              <MovieCard key={relatedMovie.id} movie={relatedMovie} onSelect={onSelect} />
             ))}
           </div>
         </section>
@@ -85,7 +121,7 @@ export default function DetailPage({ movie, onSelect, onBack }) {
         </section>
         <button className="back-button" onClick={onBack}>← Back to all titles</button>
       </article>
-      <Sidebar onSelect={onSelect} />
+      <Sidebar movies={relatedMovies} onSelect={onSelect} />
     </main>
   )
 }

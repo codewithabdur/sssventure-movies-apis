@@ -1,39 +1,54 @@
-import 'dotenv/config'
-import { createApp } from './Services/appService.js'
-import { closePool } from './Utills/Db.js'
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import postRoutes from "./Routes/Post.routes.js";
+import fetchPostRoutes from "./Routes/fetcpost.routes.js";
 
-const port = Number(process.env.PORT) || 3000
-const app = createApp()
-const server = app.listen(port, () => {
-  console.log(`API server listening on port ${port}`)
-})
+const app = express();
+
+app.set("trust proxy", 1); // needed if you're behind nginx / IIS / a proxy, so rate limiting sees real IPs
+// ---------- CORS allowlist ----------
+const allowedOrigins = [
+  "https://corexark.imaginary-realms.in",
+  "https://sssventure.imaginary-realms.in",
+  "https://docs.google.com",
+  "https://script.google.com",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:9000",
+  "https://movies.imaginary-realms.in",
+]
+  .map((o) => o.trim())
+  .filter(Boolean);
+// .env example: ALLOWED_ORIGINS=https://sssventure.imaginary-realms.in,http://localhost:5173
+
+app.use(
+  cors({
+    origin: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
+    credentials: true,
+    maxAge: 600,
+  }),
+);
 
 
-app.use("/", (req, res) => {
-  res.send("API is running")
-})
+app.use(helmet());
+app.use(express.json());
+app.use(morgan("dev"));
 
-let isShuttingDown = false
 
-async function shutdown(signal) {
-  if (isShuttingDown) return
-  isShuttingDown = true
-  console.log(`${signal} received. Shutting down API server.`)
+app.get("/", (req, res) =>
+  res.json({
+    status: "OK",
+    message: "Welcome to the Movies API",
+  }),
+);
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 
-  server.close(async (error) => {
-    if (error) {
-      console.error('Error while closing API server:', error)
-      process.exitCode = 1
-    }
+app.use("/api/posts", postRoutes);
+app.use("/api/posts", fetchPostRoutes);
 
-    try {
-      await closePool()
-    } catch (poolError) {
-      console.error('Error while closing SQL Server pool:', poolError)
-      process.exitCode = 1
-    }
-  })
-}
 
-process.on('SIGINT', () => void shutdown('SIGINT'))
-process.on('SIGTERM', () => void shutdown('SIGTERM'))
+export default app;

@@ -1,6 +1,6 @@
-import { movies, sidebarTags } from '../utils/movies.js'
+import { sidebarTags } from '../utils/movies.js'
 
-export default function Sidebar({ onSelect }) {
+export default function Sidebar({ movies = [], onSelect }) {
   return (
     <aside className="sidebar">
       <section className="side-box">
@@ -31,7 +31,7 @@ export default function Sidebar({ onSelect }) {
       </section>
       <section className="side-box popular">
         <h3>POPULAR POSTS</h3>
-        {movies.slice(2, 8).map((movie) => (
+        {movies.slice(0, 6).map((movie) => (
           <button key={movie.title} className="popular-item" onClick={() => onSelect(movie)}>
             <span className={`mini-poster art-${movie.color}`} />
             <span>Download {movie.title} ({movie.season}) Dual Audio | 480p | 720p | 1080p</span>

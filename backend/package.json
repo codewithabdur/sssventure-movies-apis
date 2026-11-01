@@ -2,11 +2,11 @@
   "name": "movies",
   "version": "1.0.0",
   "description": "moviesmod movie links",
-  "main": "app.js",
+  "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon app.js",
-    "dev": "nodemon app.js"
+    "start": "nodemon index.js",
+    "dev": "nodemon index.js"
   },
   "author": "corexARK",
   "license": "ISC",
